@@ -1,26 +1,36 @@
 use std::env;
 
 use mongodb::{
-    bson::doc,
-    sync::{Client, Collection, Database},
+    sync::{Client, Collection }, bson::extjson::de::Error,
 };
 
 use crate::models::user_model::User;
 
-pub struct MongoRepo {}
+pub struct MongoRepo {
+    col: Collection<User>
+}
 
 impl MongoRepo {
-    fn init() -> Collection<User> {
+    pub fn init() -> Self {
         let uri = match env::var("MONGOURI") {
-            Ok(v) => v,
-            Err(e) => format!("Error loading env variable"),
+            Ok(v) => v.to_string(),
+            Err(_) => format!("Error loading env variable"),
         };
         let client = Client::with_uri_str(uri).unwrap();
         let db = client.database("rustDB");
-        db.collection("User")
+        let col: Collection<User> = db.collection("User");
+        
+        MongoRepo { col }
     }
 
-    // fn getAllUsers(&self) -> Result<Vec<User>, &str> {
-    //     let col = init();
+    pub fn get_all_users(&self) -> Result<Vec<User>, Error> {
+        let cursors = self.col.find(None, None).ok().expect("error getting list of docs");
+        let users = cursors.map(|doc| doc.unwrap()).collect();
+
+        Ok(users)
+    }
+
+    // fn get_user() {
+        
     // }
 }
