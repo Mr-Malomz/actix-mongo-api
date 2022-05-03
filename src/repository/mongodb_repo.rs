@@ -28,12 +28,12 @@ impl MongoRepo {
         MongoRepo { col }
     }
 
-    pub fn create_user(&self, newUser: User) -> Result<InsertOneResult, Error> {
+    pub fn create_user(&self, new_user: User) -> Result<InsertOneResult, Error> {
         let new_doc = User {
             id: None,
-            name: newUser.name,
-            location: newUser.location,
-            title: newUser.title,
+            name: new_user.name,
+            location: new_user.location,
+            title: new_user.title,
         };
         let user = self
             .col
