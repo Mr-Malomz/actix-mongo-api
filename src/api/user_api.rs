@@ -1,5 +1,9 @@
-use crate::{repository::mongodb_repo::MongoRepo};
-use actix_web::{get, error, web::{Json, Data}, Responder, Result};
+use crate::{models::user_model::User, repository::mongodb_repo::MongoRepo};
+use actix_web::{
+    error, get, post,
+    web::{Data, Json},
+    Responder, Result,
+};
 
 #[get("/users")]
 pub async fn get_all_users(db: Data<MongoRepo>) -> Result<impl Responder> {
@@ -7,6 +11,12 @@ pub async fn get_all_users(db: Data<MongoRepo>) -> Result<impl Responder> {
 
     match users {
         Ok(users) => Ok(Json(users)),
-        Err(_) => Err(error::ErrorBadRequest("err getting list of users"))
+        Err(_) => Err(error::ErrorBadRequest("err getting list of users")),
     }
 }
+
+// #[post("/user")]
+// pub async fn create_user(db: Data<MongoRepo>, newUser: Json<User>) -> Result<impl Responder> {
+//     let {} = newUser;
+//     let user = db.create_user(newUser);
+// }
