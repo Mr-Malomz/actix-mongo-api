@@ -23,7 +23,8 @@ pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> Result<im
 }
 
 #[get("/user/{id}")]
-pub async fn get_user(db: Data<MongoRepo>, id: Path<String>) -> Result<impl Responder> {
+pub async fn get_user(db: Data<MongoRepo>, path: Path<String>) -> Result<impl Responder> {
+    let id = path.into_inner();
     let user_detail = db.get_user(id);
 
     match user_detail {

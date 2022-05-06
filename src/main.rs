@@ -1,10 +1,11 @@
-use actix_web::{web::Data, App, HttpServer};
-use api::user_api::{create_user, get_all_users, get_user};
-use repository::mongodb_repo::MongoRepo;
-
 mod api;
 mod models;
 mod repository;
+mod helper;
+
+use actix_web::{web::Data, App, HttpServer};
+use api::user_api::{create_user, get_all_users, get_user};
+use repository::mongodb_repo::MongoRepo;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
