@@ -1,12 +1,11 @@
 use std::env;
 extern crate dotenv;
 
-use actix_web::web::Path;
 use dotenv::dotenv;
 
 use mongodb::{
     bson::{doc, extjson::de::Error, oid::ObjectId},
-    results::{InsertOneResult, UpdateResult},
+    results::{DeleteResult, InsertOneResult, UpdateResult},
     sync::{Client, Collection},
 };
 
@@ -40,7 +39,7 @@ impl MongoRepo {
             .col
             .insert_one(new_doc, None)
             .ok()
-            .expect("Error getting user's detail");
+            .expect("Error creating user");
 
         Ok(user)
     }
@@ -75,6 +74,18 @@ impl MongoRepo {
             .ok()
             .expect("Error updating user");
         Ok(updated_doc)
+    }
+
+    pub fn delete_user(&self, id: &String) -> Result<DeleteResult, Error> {
+        let obj_id = ObjectId::parse_str(id).unwrap();
+        let filter = doc! {"_id": obj_id};
+        let user_detail = self
+            .col
+            .delete_one(filter, None)
+            .ok()
+            .expect("Error deleting user");
+
+        Ok(user_detail)
     }
 
     pub fn get_all_users(&self) -> Result<Vec<User>, Error> {

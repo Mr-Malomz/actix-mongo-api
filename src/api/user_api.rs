@@ -1,15 +1,13 @@
-use crate::{
-    helper::error_helper::UserError, models::user_model::User, repository::mongodb_repo::MongoRepo,
-};
+use crate::{models::user_model::User, repository::mongodb_repo::MongoRepo};
 use actix_web::{
-    error, get, post, put,
+    delete, get, post, put,
     web::{Data, Json, Path},
-    Responder, Result,
+    HttpResponse,
 };
 use mongodb::bson::oid::ObjectId;
 
 #[post("/user")]
-pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> Result<impl Responder> {
+pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpResponse {
     let data = User {
         id: None,
         name: new_user.name.to_owned(),
@@ -17,28 +15,25 @@ pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> Result<im
         title: new_user.title.to_owned(),
     };
 
-    let user = db.create_user(data);
+    let user_detail = db.create_user(data);
 
-    match user {
-        Ok(users) => Ok(Json(users)),
-        Err(_) => Err(error::ErrorBadRequest("err getting list of users")),
+    match user_detail {
+        Ok(user) => HttpResponse::Ok().json(user),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
 
 #[get("/user/{id}")]
-pub async fn get_user(
-    db: Data<MongoRepo>,
-    path: Path<String>,
-) -> Result<impl Responder, UserError> {
+pub async fn get_user(db: Data<MongoRepo>, path: Path<String>) -> HttpResponse {
     let id = path.into_inner();
     if id.is_empty() {
-        return Err(UserError::BadRequest);
+        return HttpResponse::BadRequest().body("invalid ID");
     }
     let user_detail = db.get_user(&id);
 
     match user_detail {
-        Ok(users) => Ok(Json(users)),
-        Err(_) => Err(UserError::ServerError),
+        Ok(user) => HttpResponse::Ok().json(user),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
 
@@ -47,10 +42,10 @@ pub async fn update_user(
     db: Data<MongoRepo>,
     path: Path<String>,
     new_user: Json<User>,
-) -> Result<impl Responder, UserError> {
+) -> HttpResponse {
     let id = path.into_inner();
     if id.is_empty() {
-        return Err(UserError::BadRequest);
+        return HttpResponse::BadRequest().body("invalid ID");
     };
     let data = User {
         id: Some(ObjectId::parse_str(&id).unwrap()),
@@ -63,27 +58,47 @@ pub async fn update_user(
 
     match update_result {
         Ok(update) => {
-            if update.matched_count == 1  {
+            if update.matched_count == 1 {
                 let updated_user_info = db.get_user(&id);
-                
-               return  match updated_user_info {
-                    Ok(user) => Ok(Json(user)),
-                    Err(_) => Err(UserError::ServerError),
-                }
+
+                return match updated_user_info {
+                    Ok(user) => HttpResponse::Ok().json(user),
+                    Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+                };
             } else {
-                return Err(UserError::NotFound)
+                return HttpResponse::NotFound().body("No user found with specified ID");
             }
-        },
-        Err(_) => Err(UserError::ServerError),
+        }
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
+}
+
+#[delete("/user/{id}")]
+pub async fn delete_user(db: Data<MongoRepo>, path: Path<String>) -> HttpResponse {
+    let id = path.into_inner();
+    if id.is_empty() {
+        return HttpResponse::BadRequest().body("invalid ID");
+    };
+    let result = db.delete_user(&id);
+
+    match result {
+        Ok(res) => {
+            if res.deleted_count == 1 {
+                return HttpResponse::Ok().json("User successfully deleted!");
+            } else {
+                return HttpResponse::NotFound().json("User with specified ID not found!");
+            }
+        }
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
 
 #[get("/users")]
-pub async fn get_all_users(db: Data<MongoRepo>) -> Result<impl Responder> {
+pub async fn get_all_users(db: Data<MongoRepo>) -> HttpResponse {
     let users = db.get_all_users();
 
     match users {
-        Ok(users) => Ok(Json(users)),
-        Err(_) => Err(error::ErrorBadRequest("err getting list of users")),
+        Ok(users) => HttpResponse::Ok().json(users),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
