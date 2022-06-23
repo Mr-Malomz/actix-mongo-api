@@ -15,7 +15,7 @@ pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpRespo
         title: new_user.title.to_owned(),
     };
 
-    let user_detail = db.create_user(data);
+    let user_detail = db.create_user(data).await;
 
     match user_detail {
         Ok(user) => HttpResponse::Ok().json(user),
@@ -29,7 +29,7 @@ pub async fn get_user(db: Data<MongoRepo>, path: Path<String>) -> HttpResponse {
     if id.is_empty() {
         return HttpResponse::BadRequest().body("invalid ID");
     }
-    let user_detail = db.get_user(&id);
+    let user_detail = db.get_user(&id).await;
 
     match user_detail {
         Ok(user) => HttpResponse::Ok().json(user),
@@ -54,12 +54,12 @@ pub async fn update_user(
         title: new_user.title.to_owned(),
     };
 
-    let update_result = db.update_user(&id, data);
+    let update_result = db.update_user(&id, data).await;
 
     match update_result {
         Ok(update) => {
             if update.matched_count == 1 {
-                let updated_user_info = db.get_user(&id);
+                let updated_user_info = db.get_user(&id).await;
 
                 return match updated_user_info {
                     Ok(user) => HttpResponse::Ok().json(user),
@@ -79,7 +79,7 @@ pub async fn delete_user(db: Data<MongoRepo>, path: Path<String>) -> HttpRespons
     if id.is_empty() {
         return HttpResponse::BadRequest().body("invalid ID");
     };
-    let result = db.delete_user(&id);
+    let result = db.delete_user(&id).await;
 
     match result {
         Ok(res) => {
@@ -95,7 +95,7 @@ pub async fn delete_user(db: Data<MongoRepo>, path: Path<String>) -> HttpRespons
 
 #[get("/users")]
 pub async fn get_all_users(db: Data<MongoRepo>) -> HttpResponse {
-    let users = db.get_all_users();
+    let users = db.get_all_users().await;
 
     match users {
         Ok(users) => HttpResponse::Ok().json(users),

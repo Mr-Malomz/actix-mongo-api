@@ -8,7 +8,7 @@ use repository::mongodb_repo::MongoRepo;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let db = MongoRepo::init();
+    let db = MongoRepo::init().await;
     let db_data = Data::new(db);
     HttpServer::new(move || {
         App::new()

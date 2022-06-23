@@ -10,8 +10,9 @@ edition = "2018"
 actix-web = "4"
 serde = "1.0.136"
 dotenv = "0.15.0"
+futures = "0.3"
 
 [dependencies.mongodb]
 version = "2.2.0"
 default-features = false
-features = ["sync"] 
+features = ["async-std-runtime"]
